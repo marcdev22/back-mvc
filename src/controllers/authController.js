@@ -4,7 +4,7 @@ const { createUser, findUserByEmail } = require('../services/userService')
 
 exports.signup = async (req, res) => {
     try {
-        const { email, password } = req.body
+        const { email, password, id } = req.body
         const existingUser = await findUserByEmail(email)
         if(existingUser.success){
             return res.status(400).json({
@@ -17,7 +17,8 @@ exports.signup = async (req, res) => {
 
         const newUser = {
             email: email,
-            password: hashedPassword
+            password: hashedPassword,
+            id: id
         }
 
         const userResult = await createUser(newUser)
@@ -53,8 +54,8 @@ exports.login = async (req, res) => {
         const user = findEmail.user
         const findPassword = await bcrypt.compare(password, user.password)
 
-        if(!findPassword.success){
-            res.status(401).json({
+        if(!findPassword){
+            return res.status(401).json({
                 message: 'Incorrect password'
             })
         }
@@ -65,12 +66,12 @@ exports.login = async (req, res) => {
         }, process.env.TOP_SECRET, {
             expiresIn: '1h'
         })
-        res.status(200).json({
+        return res.status(200).json({
             token: token
         })
     }
     catch(error){
-        res.status(500).json({
+        return res.status(500).json({
             message: error.message
         })
     }}
